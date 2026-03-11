@@ -7,7 +7,7 @@ export default function AuthWallet() {
     const [account, setAccount] = useState(null);
     const [isConnecting, setIsConnecting] = useState(false);
     const [needToInstallMetaMask, setNeedToInstallMetaMask] = useState(false);
-    const ofuscateAddress = useMemo(() => ofuscateAddress(account), [account]);
+    const ofuscateAddressMemo = useMemo(() => ofuscateAddress(account), [account]);
 
     // On component mount, check if MetaMask is installed and if there are any connected accounts
     useEffect(() => {
@@ -81,7 +81,7 @@ export default function AuthWallet() {
                 disabled={!isMetaMaskInstalled || isConnecting}
                 onClick={connectWalletHandler}
             >
-                {isConnecting ? "Please check your wallet..." : (account ? ofuscateAddress : "Connect Wallet")}
+                {isConnecting ? "Please check your wallet..." : (account ? ofuscateAddressMemo : "Connect Wallet")}
             </button>
             {renderInstallMetaMaskMessage()}
         </div>
