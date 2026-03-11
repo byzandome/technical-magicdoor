@@ -1,19 +1,12 @@
-import { useEffect, useState } from "react";
-import { getBalance, getProvider } from "../utils/web3";
 
-export default function Balance({ account }) {
-    const [balance, setBalance] = useState(null);
+import { useBalance } from "wagmi";
 
-    useEffect(() => {
-        if (!account) return;
+export default function Balance({ address }) {
+    const { data: balance } = useBalance({
+        address,
+    })
 
-        const provider = getProvider();
-        getBalance(provider, account).then(setBalance).catch((error) => {
-            console.error("Failed to get balance:", error);
-        });
-    }, [account]);
-
-    if (account === null) return null;
-    if (balance === null) return "...";
-    return `Your Balance: ${balance} ETH`;
+    if (!address) return null;
+    if (!balance) return "...";
+    return `Your Balance: ${balance.value} ${balance.symbol}`;
 }

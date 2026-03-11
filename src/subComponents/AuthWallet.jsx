@@ -1,89 +1,50 @@
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { getProvider, isMetaMaskInstalled, ofuscateAddress } from "../utils/web3";
-import Balance from "./Balance";
+import { useEffect, useMemo, useState } from 'react'
+import { useBalance, useConnect, useConnection, useConnectors, useDisconnect } from 'wagmi'
+import { ofuscateAddress } from '../utils/web3'
+import Balance from './Balance'
+
 
 export default function AuthWallet() {
-    const [account, setAccount] = useState(null);
-    const [isConnecting, setIsConnecting] = useState(false);
-    const [needToInstallMetaMask, setNeedToInstallMetaMask] = useState(false);
-    const ofuscateAddressMemo = useMemo(() => ofuscateAddress(account), [account]);
+    const { connect } = useConnect()
+    const connectors = useConnectors()
 
-    // On component mount, check if MetaMask is installed and if there are any connected accounts
+    return connectors.map((connector) => (
+        <WalletOption
+            key={connector.uid}
+            connector={connector}
+            onClick={() => connect({ connector })}
+        />
+
+    ))
+}
+
+function WalletOption({
+    connector,
+    onClick,
+}) {
+    const [ready, setReady] = useState(false)
+    const { address } = useConnection()
+    const { disconnect } = useDisconnect()
+
+
+
+    const formatAddress = useMemo(() => ofuscateAddress(address), [address])
+
+
     useEffect(() => {
-        if (!isMetaMaskInstalled()) return () => { };
-
-        const getConnectedAccounts = async () => {
-            const provider = getProvider();
-            const accounts = await provider.listAccounts();
-            if (accounts.length > 0) {
-                setAccount(accounts[0].address);
-            }
-        };
-
-        getConnectedAccounts();
-
-    }, []);
-
-    // Listen for account changes and update state accordingly
-    useEffect(() => {
-        if (!isMetaMaskInstalled()) return () => { };
-
-        const handleAccountsChanged = (accounts) => {
-            const account = accounts.length > 0 ? accounts[0].address : null;
-            setAccount(account);
-        };
-
-        window.ethereum?.on('accountsChanged', handleAccountsChanged);
-
-        return () => {
-            window.ethereum?.removeListener('accountsChanged', handleAccountsChanged);
-        };
-    }, []);
-
-
-    // Connect wallet handler with error handling for pending connection requests
-    const connectWalletHandler = useCallback(async () => {
-        if (!isMetaMaskInstalled()) {
-            setNeedToInstallMetaMask(true);
-            return;
-        }
-
-        setIsConnecting(true);
-        try {
-            const provider = getProvider();
-            await provider.getSigner();
-            setIsConnecting(false);
-
-        } catch (err) {
-            if (err.error?.code === -32002) {
-                console.warn("Connection request already pending. Please check MetaMask.");
-                return
-            }
-            setIsConnecting(false);
-        }
-    }, [isMetaMaskInstalled, getProvider]);
-
-
-    const renderInstallMetaMaskMessage = () => {
-        if (!needToInstallMetaMask) return null;
-        return (
-            <div className="install-metamask-message">
-                Please install MetaMask to connect your wallet.
-            </div>
-        );
-    };
+        ; (async () => {
+            const provider = await connector.getProvider()
+            setReady(!!provider)
+        })()
+    }, [connector])
 
     return (
-        <div className="auth-wallet">
-            <Balance account={account} />
-            <button className="connect-wallet-button"
-                disabled={!isMetaMaskInstalled || isConnecting}
-                onClick={connectWalletHandler}
-            >
-                {isConnecting ? "Please check your wallet..." : (account ? ofuscateAddressMemo : "Connect Wallet")}
+        <div className='auth-wallet'>
+            <Balance address={address} />
+            <button className='connect-wallet-button' disabled={!ready} onClick={formatAddress ? disconnect : onClick} title={formatAddress ? "Disconnect" : "Connect Wallet"}>
+                {formatAddress || connector.name}
             </button>
-            {renderInstallMetaMaskMessage()}
         </div>
-    );
+    )
 }
