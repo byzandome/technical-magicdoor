@@ -1168,3 +1168,35 @@ h5 {
     width: 100%;
   }
 }
+
+/* Auth Button */
+
+.auth-wallet{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.connect-wallet-button{
+  background: #5b656f;
+  color: #ffffff;
+  font-weight: 500;
+  padding: 10px;
+  width: 250px;
+  border-top-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  border: none;
+  margin-top: 25px;
+  position: relative;
+  cursor: pointer;
+}
+
+.install-metamask-message{
+  background: #f5e9d6;
+  color: #111;
+  font-size: 20px;
+  border-radius: 20px;
+  padding: 8px 15px;
+  margin-top: 25px;
+}
